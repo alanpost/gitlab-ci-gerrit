@@ -1,4 +1,4 @@
-∂#!/usr/bin/php
+#!/usr/bin/php
 <?php
 
 # Copyright 2019 Mobimentum Srl
@@ -39,8 +39,10 @@ if (empty($opts['commit'])) $paramsOk = missingParam('param', 'commit');
 if (empty($opts['patchset'])) $paramsOk = missingParam('param', 'patchset');
 
 if ($paramsOk) {
-	// Get project ID from project name
+	// Get project ID from project name 
 	$projectId = getProjectId($opts['project']);
+
+        print "opts.project = {$opts['project']}\n";
 
 	// Get CI token from project ID
 	$tokenCI = '';
@@ -69,33 +71,22 @@ if ($paramsOk) {
 		$ref = "refs/heads/" . getBranchName($opts['change-url'], $opts['patchset']);
 		$gerritAddress = parse_url($gerritConfig['gerrit']['canonicalWebUrl'], PHP_URL_HOST);
 		$gerritSshPort = parse_url($gerritConfig['sshd']['listenAddress'], PHP_URL_PORT);
-        for ($i = 0; $i < 20; $i++) {
-		    print "Triggering build with commit: {$opts['commit']}, ref: $ref\n";
-		    $json = getJson(
-		    	$config['url'] . "/api/v4/projects/{$projectId}/trigger/pipeline",
-		    	http_build_query(
-		    		[
-		    			'ref' => $ref,
-		    			'variables[GERRIT_COMMIT]' => $opts['commit'],
-		    			'variables[GERRIT_USER]' => $config['gerritUser'],
-		    			'variables[GERRIT_ADDRESS]' => $gerritAddress,
-		    			'variables[GERRIT_SSH_PORT]' => $gerritSshPort,
-		    			'token' => $tokenCI
-		    		]
-		    	),
-		    	'application/x-www-form-urlencoded'
-		    );
-		    var_dump($json);
-            $msg = $json->{"message"}->{"base"}[0];
-            if ($msg == "Reference not found") {
-                print "Reference not found. Will retry $i.\n";
-                sleep(1);
-                continue;
-            } else {
-                print "All is well\n";
-            }
-            break;
-        }
+		print "Triggering build with commit: {$opts['commit']}, ref: $ref\n";
+		$json = getJson(
+			$config['url'] . "/api/v4/projects/{$projectId}/trigger/pipeline",
+			http_build_query(
+				[
+					'ref' => $ref,
+					'variables[GERRIT_COMMIT]' => $opts['commit'],
+					'variables[GERRIT_USER]' => $config['gerritUser'],
+					'variables[GERRIT_ADDRESS]' => $gerritAddress,
+					'variables[GERRIT_SSH_PORT]' => $gerritSshPort,
+					'token' => $tokenCI
+				]
+			),
+			'application/x-www-form-urlencoded'
+		);
+		var_dump($json);
 	}
 	else print "ERROR: Token CI NOT FOUND in project {$opts['project']} ({$projectId})\n";
 }

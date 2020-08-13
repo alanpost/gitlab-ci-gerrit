@@ -37,7 +37,7 @@ if ($paramsOk) {
     $comment = trim($m[2]);
     print "patchset=$patchset comment='$comment' recheckCommand='{$config['recheckCommand']}'\n";
     if ($comment == $config['recheckCommand']) {
-        $command = dirname(__FILE__) . '/patchset-created '
+        $command = dirname(__FILE__) . '/patchset-created-action '
                 . ' --project ' . $opts['project']
                 . ' --branch ' . $opts['branch']
                 . ' --change-url ' . $opts['change-url']

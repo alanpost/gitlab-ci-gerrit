@@ -27,18 +27,24 @@ function getProjectId($projectName) {
 	global $config;
 
 	$projectId = 0;
-        $json = getJson($config['url'] . "/api/v4/projects?simple=true&search={$projectName}");
-        foreach ($json as $project) {
-                if ($project->name == $projectName) { $projectId = $project->id; break; }
-        } 
+    $projectBase = preg_replace('/^.*\/(.+)/i', '${1}', $projectName);
+    $link = $config['url'] . "/api/v4/projects?simple=true&search={$projectBase}";
+	print "json_url = {$link}\n";
+    $json = getJson($config['url'] . "/api/v4/projects?simple=true&search={$projectBase}");
+    foreach ($json as $project) {
+        print "name => {$project->path_with_namespace} vs {$projectName}\n";
+        if ($project->path_with_namespace == $projectName) { $projectId = $project->id; break; }
+    }
 
-	return $projectId;
+    return $projectId;
 }
 
 /** Get branch name from ref ID */
 function getBranchName($changeUrl, $patchsetId=0) {
 	$refId = intval(@end(explode('/', $changeUrl)));
-	$refIdBase = intval(substr($refId, -2)); // FIXME
+    print "refId = $refId\n";
+	$refIdBase = substr($refId, -2); // FIXME
+    print "refIdBase = $refIdBase\n";
 
 	return "review/$refIdBase/$refId" . ($patchsetId ? "/$patchsetId" : "");
 }
@@ -78,8 +84,12 @@ function deleteGitlabBranch($projectId, $branchName, $patchsetId) {
 function getJson($url, $postdata=NULL, $contentType=NULL, $method=NULL) {
 	global $config;
 
-	$headers = [ "Content-Type: $contentType", "Private-Token: ".$config['token']];
 	if (!$contentType) $contentType = 'application/json; charset=utf-8';
+	$headers = [ "Content-Type: $contentType", "Private-Token: ".$config['token']];
+    print "getJson ----\n";
+    print "url = {$url}\n";
+    print "headers {$headers[0]}\n";
+    print "headers {$headers[1]}\n";
 	list($headers, $body, $code) = doRequest($url, $postdata, $headers, $method);
 
 	return json_decode($body);
@@ -99,6 +109,7 @@ function doRequest($url, $postdata=NULL, $headers=[], $method=NULL) {
 	if (!empty($postdata)) {
 		curl_setopt($ch, CURLOPT_POST, TRUE);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+        print "{$postdata}\n";
 	}
 	
 	if ($method) {
@@ -110,10 +121,11 @@ function doRequest($url, $postdata=NULL, $headers=[], $method=NULL) {
 	//curl_setopt($ch, CURLOPT_VERBOSE, TRUE);
 	curl_setopt($ch, CURLOPT_HEADER, TRUE);
 
-	// Do request!
+        // Do request!
 	$response = curl_exec($ch); 
 
 	// Parse response
+	$response_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 	$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 	$headers = substr($response, 0, $header_size);
 	$code = explode(" ", $headers)[1];

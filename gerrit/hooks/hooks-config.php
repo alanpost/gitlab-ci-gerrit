@@ -19,13 +19,13 @@ define('IS_GERRIT', isset($_SERVER['GERRIT_SITE']));
 // Setup logging
 if (IS_GERRIT) {
 	fclose(STDOUT);
-	$STDOUT = fopen(realpath(dirname(__FILE__) . '/../logs/hooks_log'), 'a');
+	$STDOUT = fopen(realpath(dirname(__FILE__) . '/../../logs/hooks_log'), 'a');
 }
 
 // Read configuration
 global $config;
-$config = parse_ini_file(realpath(dirname(__FILE__) . '/../etc/gitlab.config'), TRUE)['gitlab'];
-$gerritConfig = parse_ini_file(realpath(dirname(__FILE__) . '/../etc/gerrit.config'), TRUE);
+$config = parse_ini_file('/gerrit/etc/gitlab.config', TRUE)['gitlab'];
+$gerritConfig = parse_ini_file('/gerrit/etc/gerrit.config', TRUE);
 
 // Parse command-line options
 $opts = [];
